@@ -1,0 +1,21 @@
+name: Validate demo and sample evidence
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate browser-demo routing
+        run: node --test tests/*.test.js
+      - name: Validate repository evidence
+        run: python3 verify_results.py
