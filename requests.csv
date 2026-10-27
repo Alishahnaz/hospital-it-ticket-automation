@@ -1,0 +1,7 @@
+TicketID,IssueType,Urgency,Description
+REQ-001,Account Access,High,Employee login locked
+REQ-002,Printer,Low,Administrative printer offline
+REQ-003,Network,High,Training room wireless not working
+REQ-004,Software,Normal,Approved application installation request
+REQ-005,Unknown,Normal,General technical question
+REQ-006,Account Access,Normal,Employee asks for password reset guidance

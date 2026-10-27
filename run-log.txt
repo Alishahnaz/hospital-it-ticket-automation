@@ -1,0 +1,7 @@
+﻿Run started: 2026-10-27 13:48:58
+2026-10-27 13:48:58 | REQ-001 | Identity and Access | New
+2026-10-27 13:48:58 | REQ-002 | Desktop Support | New
+2026-10-27 13:48:58 | REQ-003 | Network Team | New
+2026-10-27 13:48:58 | REQ-004 | Application Support | New
+2026-10-27 13:48:58 | REQ-005 | Manual Review | Needs Review
+2026-10-27 13:48:58 | REQ-006 | Identity and Access | New

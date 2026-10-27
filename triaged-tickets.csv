@@ -1,0 +1,7 @@
+﻿TicketID,IssueType,Urgency,AssignedTeam,Priority,Status
+REQ-001,Account Access,High,Identity and Access,High - Review,New
+REQ-002,Printer,Low,Desktop Support,Standard,New
+REQ-003,Network,High,Network Team,High - Review,New
+REQ-004,Software,Normal,Application Support,Standard,New
+REQ-005,Unknown,Normal,Manual Review,Standard,Needs Review
+REQ-006,Account Access,Normal,Identity and Access,Standard,New

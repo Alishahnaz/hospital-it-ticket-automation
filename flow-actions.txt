@@ -1,0 +1,48 @@
+flow-actions.txt
+FUNCTION Main_copy GLOBAL
+    Folder.GetSpecialFolder SpecialFolder: Folder.SpecialFolder.DesktopDirectory SpecialFolderPath=> SpecialFolderPath
+    IF (File.IfFile.DoesNotExist File: $'''%SpecialFolderPath%\\HospitalITDemo\\requests.csv''') THEN
+        Display.ShowMessageDialog.ShowMessage Title: $'''Input file missing''' Message: $'''Please put requests.csv in the HospitalITDemo folder on the Desktop.''' Icon: Display.Icon.Warning Buttons: Display.Buttons.OK DefaultButton: Display.DefaultButton.Button1 IsTopMost: False ButtonPressed=> ButtonPressed
+        EXIT Code: 0 ErrorMessage: $'''Input file not found'''
+    END
+    File.ReadFromCSVFile.ReadCSV CSVFile: $'''%SpecialFolderPath%\\HospitalITDemo\\requests.csv''' Encoding: File.CSVEncoding.UTF8 TrimFields: True FirstLineContainsColumnNames: True ColumnsSeparator: File.CSVColumnsSeparator.Comma CSVTable=> CSVTable
+    File.WriteText File: $'''%SpecialFolderPath%\\HospitalITDemo\\triaged-tickets.csv''' TextToWrite: $'''TicketID,IssueType,Urgency,AssignedTeam,Priority,Status''' AppendNewLine: True IfFileExists: File.IfFileExists.Overwrite Encoding: File.FileEncoding.UTF8
+    DateTime.GetCurrentDateTime.Local DateTimeFormat: DateTime.DateTimeFormat.DateAndTime CurrentDateTime=> CurrentDateTime
+    Text.ConvertDateTimeToText.FromCustomDateTime DateTime: CurrentDateTime CustomFormat: $'''yyyy-MM-dd HH:mm:ss''' Result=> FormattedDateTime
+    File.WriteText File: $'''%SpecialFolderPath%\\HospitalITDemo\\run-log.txt''' TextToWrite: $'''Run started: %FormattedDateTime%''' AppendNewLine: True IfFileExists: File.IfFileExists.Overwrite Encoding: File.FileEncoding.UTF8
+    SET ProcessedCount TO 0
+    SET ReviewCount TO 0
+    LOOP FOREACH CurrentItem IN CSVTable
+        SET AssignedTeam TO $'''Manual Review'''
+        SWITCH CurrentItem['IssueType']
+            CASE = $'''Account Access'''
+                SET AssignedTeam TO $'''Identity and Access'''
+            CASE = $'''Printer'''
+                SET AssignedTeam TO $'''Desktop Support'''
+            CASE = $'''Network'''
+                SET AssignedTeam TO $'''Network Team'''
+            CASE = $'''Software'''
+                SET AssignedTeam TO $'''Application Support'''
+        END
+        SET Priority TO $'''Standard'''
+        IF CurrentItem['Urgency'] = $'''High''' THEN
+            SET Priority TO $'''High - Review'''
+        END
+        SET TicketStatus TO $'''New'''
+        IF AssignedTeam = $'''Manual Review''' THEN
+            SET TicketStatus TO $'''Needs Review'''
+        END
+        File.WriteText File: $'''%SpecialFolderPath%\\HospitalITDemo\\triaged-tickets.csv''' TextToWrite: $'''%CurrentItem['TicketID']%,%CurrentItem['IssueType']%,%CurrentItem['Urgency']%,%AssignedTeam%,%Priority%,%TicketStatus%''' AppendNewLine: True IfFileExists: File.IfFileExists.Append Encoding: File.FileEncoding.UTF8
+        File.WriteText File: $'''%SpecialFolderPath%\\HospitalITDemo\\run-log.txt''' TextToWrite: $'''%FormattedDateTime% | %CurrentItem['TicketID']% | %AssignedTeam% | %TicketStatus%''' AppendNewLine: True IfFileExists: File.IfFileExists.Append Encoding: File.FileEncoding.UTF8
+        Variables.IncreaseVariable Value: ProcessedCount IncrementValue: 1
+        IF TicketStatus = $'''Needs Review''' THEN
+            Variables.IncreaseVariable Value: ReviewCount IncrementValue: 1
+        END
+    END
+    Display.ShowMessageDialog.ShowMessage Title: $'''IT Ticket Processing Complete''' Message: $'''Automation completed.
+
+Tickets processed: %ProcessedCount%
+Tickets needing manual review: %ReviewCount%
+
+Check the HospitalITDemo folder for results.''' Icon: Display.Icon.Information Buttons: Display.Buttons.OK DefaultButton: Display.DefaultButton.Button1 IsTopMost: True ButtonPressed=> ButtonPressed2
+END FUNCTION
