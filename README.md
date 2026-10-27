@@ -8,14 +8,14 @@ This portfolio project demonstrates a structured ticket-triage workflow for a ho
 
 | Experience | What you can do |
 |---|---|
-| **[Launch interactive demo](demo/)** | Process sample tickets, edit inputs and download the output and log in your browser |
+| **[Browser demo files](demo/)** | Download the two demo files, open them in a browser, and explore ticket processing |
 | [View the workflow](Flow-Design.png) | Inspect the Microsoft Power Automate Desktop action sequence |
 | [Explore sample results](triaged-tickets.csv) | See the generated assignments, priorities and statuses |
 | [Review activity log](run-log.txt) | Inspect the timestamped processing records |
 | [Reproduce on Windows](#run-in-power-automate-desktop) | Run the original desktop workflow |
 | [Validation and tests](test-results.md) | Inspect expected results, automated checks and desktop test procedures |
 
-**Demo options:** The [browser preview](demo/) is interactive and reflects the same core routing rules; it is a separate JavaScript implementation. The **Power Automate Desktop flow** runs locally on Windows and uses the action source in [flow-actions.txt](flow-actions.txt). There is no video recording included in this repository.
+**Demo options:** The browser preview in [demo/](demo/) is interactive and reflects the same core routing rules; it is a separate JavaScript implementation. The **Power Automate Desktop flow** runs locally on Windows and uses the action source in [flow-actions.txt](flow-actions.txt). There is no video recording included in this repository.
 
 > If the interactive link opens the GitHub folder listing instead of a website, open [demo/index.html](demo/index.html) and download it together with [demo/triage.js](demo/triage.js). Open the HTML file in a browser. Static hosting can also be enabled with GitHub Pages (see [Publishing the browser demo](#publishing-the-browser-demo)).
 
@@ -148,7 +148,7 @@ Record observed results in [test-results.md](test-results.md). The repository's 
 
 ## Browser demonstration
 
-The separate [interactive browser demo](demo/) implements the documented routing logic, includes the six sample tickets, supports custom CSV inputs and allows downloading a generated report and activity log. It uses a standards-aware CSV parser and exporter to support quoted fields and provides a convenient way to review the workflow without installing PAD.
+The separate [interactive browser demo source](demo/) implements the documented routing logic, includes the six sample tickets, supports custom CSV inputs and allows downloading a generated report and activity log. It uses a standards-aware CSV parser and exporter to support quoted fields and provides a convenient way to review the workflow without installing PAD.
 
 **Browser demo ≠ desktop runtime.** The browser simulation demonstrates routing rules and sample outcomes but cannot test PAD actions, Windows file handling, desktop permissions or local workflow execution.
 
