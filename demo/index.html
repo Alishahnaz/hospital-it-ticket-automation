@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hospital IT Service Desk | Ticket Triage Demo</title>
+<style>
+:root{color-scheme:light;font:16px system-ui,-apple-system,Segoe UI,sans-serif;background:#f3f6fb;color:#14233e}*{box-sizing:border-box}body{margin:0}header{background:#132948;color:white;padding:32px max(22px,calc((100vw - 1050px)/2))}h1{margin:.2em 0;font-size:clamp(1.55rem,4vw,2.5rem)}h2{font-size:1.35rem;margin:0 0 12px}.eyebrow{letter-spacing:.1em;text-transform:uppercase;color:#b4daf6;font-weight:700;font-size:.75rem}header p{max-width:730px;line-height:1.5;color:#d6e5f6}.container{max-width:1090px;padding:25px 20px 65px;margin:auto}.notice{padding:15px 19px;border-left:4px solid #2766a2;background:white;margin-bottom:22px;line-height:1.5}.panel{background:white;border:1px solid #dbe2ed;border-radius:14px;padding:23px;margin:20px 0;box-shadow:0 2px 9px #1b3d6012}p{line-height:1.55}textarea{width:100%;min-height:165px;font:13px/1.6 ui-monospace,Consolas,monospace;border:1px solid #aab9cc;border-radius:8px;padding:12px}button,.btn{border:0;border-radius:8px;background:#18558f;color:white;padding:12px 17px;font-weight:650;cursor:pointer;margin:6px 6px 6px 0}button.secondary{background:#e7f0fa;color:#17476f}button:disabled{opacity:.5;cursor:not-allowed}button:focus,textarea:focus{outline:3px solid #7cb5e6;outline-offset:2px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.stat{padding:16px;border:1px solid #d8e4f1;border-radius:10px;background:#f7fbff}.stat b{display:block;font-size:2rem}.stat span{color:#4c607a;font-size:.85rem}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:730px;font-size:.88rem}th,td{text-align:left;border-bottom:1px solid #dce4ee;padding:11px 9px}th{background:#eef4fa;color:#344b67}tr:hover td{background:#f9fbff}.pill{border-radius:15px;padding:3px 8px;font-size:.78rem;background:#e5edf7;white-space:nowrap}.high{background:#ffecd5;color:#845006}.review{background:#ffe2e1;color:#8a2424}.actions{display:flex;flex-wrap:wrap;gap:4px}.muted{color:#52657e;font-size:.9rem}.error{color:#a1182d}.success{color:#146548}pre{white-space:pre-wrap;word-break:break-word;background:#f0f5fa;border-radius:8px;padding:16px;font-size:.82rem}a{color:#0a589c}@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}header{padding:25px 20px}.panel{padding:16px}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">Power Automate Desktop portfolio | Interactive preview</div><h1>Hospital IT Ticket Triage</h1><p>Explore a rule-based service-desk workflow: classify incoming requests, suggest support teams, identify priority flags and produce an auditable activity log.</p></header>
+<main class="container">
+<div class="notice"><strong>Interactive simulation</strong> — This browser preview reproduces the documented routing rules using JavaScript. It does not run Microsoft Power Automate Desktop, contact hospital systems or upload data to a server. All sample tickets are fictional.</div>
+<section class="panel"><h2>1. Prepare incoming tickets</h2><p class="muted">Edit the sample CSV or paste your own test cases. Required headers: TicketID,IssueType,Urgency,Description. Issue types use exact text matching.</p><label for="input"><strong>Input CSV</strong></label><textarea id="input" spellcheck="false"></textarea><div class="actions"><button id="run">Process tickets</button><button class="secondary" id="reset">Reset sample</button><button class="secondary" id="downloadInput">Download input CSV</button></div><p id="feedback" role="status" aria-live="polite"></p></section>
+<section class="panel"><h2>2. Review triage output</h2><div class="stats"><div class="stat"><b id="processed">—</b><span>Processed</span></div><div class="stat"><b id="urgent">—</b><span>High-priority flags</span></div><div class="stat"><b id="reviews">—</b><span>Needs manual review</span></div></div><div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Issue</th><th>Urgency</th><th>Assigned team</th><th>Priority</th><th>Status</th></tr></thead><tbody id="rows"><tr><td colspan="6">Select “Process tickets” to begin.</td></tr></tbody></table></div><div class="actions"><button id="downloadResults" disabled>Download results CSV</button><button class="secondary" id="downloadLog" disabled>Download activity log</button></div><p class="muted">High-priority flags and “Needs Review” statuses are separate classifications. Unknown issue types receive manual-review status.</p></section>
+<section class="panel"><h2>3. Activity log</h2><pre id="log">The log will appear after processing.</pre></section>
+<section class="panel"><h2>About the implementation</h2><p>The <a href="../flow-actions.txt">PAD action list</a> runs locally in Power Automate Desktop. This interactive preview demonstrates the same routing conditions but has its own CSV parser and exporter for browser-based exploration. The browser can handle quoted commas; the original PAD sample writes CSV by concatenating values and has a narrower input format.</p><p><a href="../README.md">Project documentation</a> · <a href="../test-results.md">Validation and limitations</a> · <a href="../expected-results.csv">Reference output</a></p></section>
+</main>
+<script src="./triage.js"></script><script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const api=window.HospitalTriage;
+let current=null;
+const original=()=>api.toCsv(api.sampleTickets(),api.INPUT_COLUMNS);
+function download(text,name,type){const blob=new Blob([text],{type:type||"text/plain;charset=utf-8"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+function reset(){$("input").value=original();$("feedback").textContent="Sample tickets ready."; $("feedback").className="muted";}
+function render(){
+  const parsed=api.parseCsv($("input").value);
+  const run=api.triageTickets(parsed);
+  current=run;
+  $("processed").textContent=run.processedCount;
+  $("urgent").textContent=run.highPriorityCount;
+  $("reviews").textContent=run.reviewCount;
+  const tbody=$("rows");tbody.replaceChildren();
+  for(const r of run.results){
+    const tr=document.createElement("tr");
+    for(const key of api.OUTPUT_COLUMNS){
+      const td=document.createElement("td");
+      const span=document.createElement("span");span.textContent=r[key];
+      if(key==="Priority" && r.Priority==="High - Review")span.className="pill high";
+      if(key==="Status" && r.Status==="Needs Review")span.className="pill review";
+      td.appendChild(span);tr.appendChild(td);
+    }tbody.appendChild(tr);
+  }
+  $("log").textContent=run.log;
+  $("downloadResults").disabled=false;$("downloadLog").disabled=false;
+  $("feedback").className="success";$("feedback").textContent="Processing complete: "+run.processedCount+" tickets.";
+}
+$("run").addEventListener("click",()=>{try{render()}catch(e){$("feedback").className="error";$("feedback").textContent="Input error: "+e.message;current=null;$("downloadResults").disabled=true;$("downloadLog").disabled=true;}});
+$("reset").addEventListener("click",()=>{reset();$("run").click()});
+$("downloadInput").addEventListener("click",()=>download($("input").value,"requests.csv","text/csv;charset=utf-8"));
+$("downloadResults").addEventListener("click",()=>{if(current)download(api.toCsv(current.results),"triaged-tickets.csv","text/csv;charset=utf-8")});
+$("downloadLog").addEventListener("click",()=>{if(current)download(current.log,"run-log.txt")});
+reset();$("run").click();
+})();
+</script>
+</body></html>
