@@ -1,50 +1,57 @@
-# Hospital IT Ticket Automation — Test Evidence
+# Validation Record
 
-This project uses fictional tickets. **Evidence checks are different from executing the Windows Power Automate Desktop (PAD) flow.** Do not report an unperformed test as passed.
+## Coverage
 
-## Checked-in file validation (reviewed 27 October 2026)
+This project has two verification layers:
 
-The committed files were compared directly with the supplied expected outputs:
+1. **Automated repository tests** validate routing rules, CSV parsing/export, sample outputs and archived activity logs. See [automated tests](tests/triage.test.js), [file verifier](verify_results.py) and [CI workflow](.github/workflows/validate.yml).
+2. **Desktop acceptance tests** exercise the Microsoft Power Automate Desktop workflow on Windows. These require an observed PAD execution and are recorded separately below.
 
-| Evidence check | Observation | Status |
+## Evidence from committed sample files
+
+Repository files were compared on **27 October 2026**. The saved output matches \`expected-results.csv\`, including six tickets, two high-priority flags and one exception requiring manual review. The activity log contains a run-start timestamp and six ticket records.
+
+| Repository evidence | Observed result | Status |
 |---|---|---|
-| Compare `triaged-tickets.csv` with `expected-results.csv` | Exact same header and six data rows (ignoring UTF-8 BOM) | PASS — repository file comparison |
-| Unknown category | REQ-005 assigned `Manual Review` with `Needs Review` status | PASS — repository file comparison |
-| High urgency | REQ-001 and REQ-003 have `High - Review` priority | PASS — repository file comparison |
-| Activity log | Start timestamp and six ticket records present | PASS — repository file inspection |
-| Missing input | Flow contains an input existence check and warning, but no recorded observed run | NOT YET VERIFIED IN PAD |
-| Repeat run | Flow overwrites output and log headers before appending; no recorded observed repeat-run test | NOT YET VERIFIED IN PAD |
-| Current completion dialog | Screenshot exists, but current PAD execution was not observed during this repository review | NOT INDEPENDENTLY VERIFIED |
+| Six processed ticket records | Six output rows | Verified from saved output |
+| Routing and priority | Matches all six reference rows | Verified from saved output |
+| Unknown issue exception | REQ-005: Manual Review / Needs Review | Verified from saved output |
+| Priority flags | REQ-001 and REQ-003: High - Review | Verified from saved output |
+| Activity log | Start timestamp plus six entries | Verified from saved log |
 
-To repeat the file-level checks, download or clone this repository, install Python 3, and run:
+The JavaScript regression tests and Python verifier are configured to run with GitHub Actions. Refer to the actual [Actions runs](../../actions) for their execution status; do not treat the presence of a workflow configuration as evidence of a successful CI run.
 
-```powershell
-python verify_results.py
-```
+## Desktop acceptance checklist
 
-The script checks sample output, counts, routing, and log entries. A PASS does not establish that a freshly executed PAD flow works.
+The following cases should be tested on a Windows system with Power Automate Desktop. The saved screenshots are illustrative evidence; they are not a substitute for observing every test case.
 
-## Manual PAD test checklist
-
-1. On Windows, create `Desktop\HospitalITDemo` and copy the supplied `requests.csv` there.
-2. In Power Automate Desktop, run the flow from `flow-actions.txt`.
-3. Record the completion dialog counts and compare the generated CSV to `expected-results.csv`.
-4. Check the log includes a run-start line and exactly one record for each ticket.
-5. Run again with unchanged input. Check the CSV still has **six data rows**, not twelve.
-6. Temporarily rename the input to `requests-backup.csv`. Run the flow; capture the missing-file warning. Restore the original filename.
-7. Record your test date, PAD version, Windows version, actual result and screenshot or video evidence here.
-
-| Manual test | Expected outcome | Actual observed result | Status |
+| Test | Expected outcome | Latest independently observed result | Status |
 |---|---|---|---|
-| Process six tickets | Completion dialog: 6 processed, 1 needing manual review | Not recorded here | Not verified |
-| Re-run | 6 output rows, not 12 | Not recorded here | Not verified |
-| Missing file | Warning; processing stops | Not recorded here | Not verified |
-| Verify generated output | Output matches expected-results.csv | Not recorded from a fresh PAD run | Not verified |
+| Six-ticket processing | Completion dialog: 6 processed, 1 manual review | Not recorded in this test log | Pending recorded execution |
+| Output verification | Generated CSV matches expected-results.csv | Saved sample output matches; fresh PAD run not separately documented | Pending recorded execution |
+| Repeatability | Running twice produces six, not twelve, output rows | Not recorded in this test log | Pending recorded execution |
+| Missing input file | Warning displayed; processing stops | Not recorded in this test log | Pending recorded execution |
+| Log creation | One timestamped record per ticket | Saved example contains six entries | Pending recorded execution |
 
-## Interpreting status and priority
+### Acceptance procedure
 
-`Priority = High - Review` means a high urgency request was flagged, **not** that its status became `Needs Review`. `Status = Needs Review` and the `ReviewCount` counter apply only to tickets with unknown/unmatched issue types. Thus the sample has **two priority flags** and **one manual-review ticket**.
+1. Place [requests.csv](requests.csv) at \`Desktop\HospitalITDemo\requests.csv\`.
+2. Open the existing flow in Power Automate Desktop; save and run it.
+3. Capture the completion message and inspect the local \`triaged-tickets.csv\` and \`run-log.txt\`.
+4. Run a second time and check that the output has exactly six rows.
+5. Rename the input, confirm the missing-file warning, then restore its original filename.
+6. Document the Windows version, PAD version, date, pass/fail status and supporting evidence.
 
-## Known limitations
+## Design observations
 
-The desktop flow uses exact-text matches (case and whitespace variations may not route). It writes CSV rows by concatenating strings without CSV escaping, so input containing commas, quotes, or line breaks could produce malformed output. It relies on a local Desktop folder; there is no enterprise service-desk integration, automated trigger, human approval workflow, or notification mechanism. Use only fictional data.
+- The PAD workflow uses exact-text issue category matching.
+- The two high-urgency requests are priority flags and are distinct from the single manual-review status.
+- The PAD output action concatenates CSV fields. Free-text commas, quotes and multiline fields need proper escaping before using arbitrary data.
+- The browser preview includes more robust CSV handling, but it does not run or certify the desktop flow.
+- Activity-log timestamps and browser-generated logs represent separate runs; byte-for-byte log comparison across runtime environments is not expected.
+
+## Execution record
+
+| Environment | Run date | PAD version | Result / supporting evidence |
+|---|---|---|---|
+| Desktop acceptance tests | To be entered after observed run | To be entered | To be entered |
