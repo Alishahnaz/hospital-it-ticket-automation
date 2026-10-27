@@ -1,34 +1,66 @@
 # Hospital IT Support Ticket Automation
 
-**A beginner-friendly Microsoft Power Automate Desktop (PAD) portfolio project using fictional IT support requests.** This is a personal learning project—not an application created for, connected to, or endorsed by any hospital.
+**Rule-based service-desk ticket triage | Microsoft Power Automate Desktop | CSV processing | Activity logging**
 
-## Start here (reviewers)
+This portfolio project demonstrates a structured ticket-triage workflow for a hospital IT service-desk scenario. Incoming requests are classified by issue type, routed to a proposed support team, flagged for priority handling where applicable, and recorded in an output report and processing log. The demonstration uses representative sample requests.
 
-**What does it do?** It reads six sample tickets from a CSV file, assigns a suggested IT support team based on issue type, marks high-urgency tickets for priority review, flags unmatched issue types for manual handling, writes results and logs its actions.
+## Explore the project
 
-**Quick review, no installation required:**
+| Experience | What you can do |
+|---|---|
+| **[Launch interactive demo](demo/)** | Process sample tickets, edit inputs and download the output and log in your browser |
+| [View the workflow](Flow-Design.png) | Inspect the Microsoft Power Automate Desktop action sequence |
+| [Explore sample results](triaged-tickets.csv) | See the generated assignments, priorities and statuses |
+| [Review activity log](run-log.txt) | Inspect the timestamped processing records |
+| [Reproduce on Windows](#run-in-power-automate-desktop) | Run the original desktop workflow |
+| [Validation and tests](test-results.md) | Inspect expected results, automated checks and desktop test procedures |
 
-1. [View sample incoming tickets](requests.csv).
-2. [View the routing results](triaged-tickets.csv) and [compare expected results](expected-results.csv).
-3. [View the activity log](run-log.txt).
-4. [See the desktop flow](Flow-Design.png) or [read its exact actions](flow-actions.txt).
-5. [Read test evidence and limitations](test-results.md).
+**Demo options:** The [browser preview](demo/) is interactive and reflects the same core routing rules; it is a separate JavaScript implementation. The **Power Automate Desktop flow** runs locally on Windows and uses the action source in [flow-actions.txt](flow-actions.txt). There is no video recording included in this repository.
 
-**Want to run it yourself?** Follow [Run the demo on Windows](#run-the-demo-on-windows). **Want a visual walkthrough?** See [Screenshots and demo guide](#screenshots-and-demo-guide).
+> If the interactive link opens the GitHub folder listing instead of a website, open [demo/index.html](demo/index.html) and download it together with [demo/triage.js](demo/triage.js). Open the HTML file in a browser. Static hosting can also be enabled with GitHub Pages (see [Publishing the browser demo](#publishing-the-browser-demo)).
 
-> **Demo status:** The repository contains screenshots and sample output from an earlier run, but it does **not** currently contain a recorded video of a fresh run. GitHub hosts the files; it cannot execute this Windows PAD flow in the browser.
+## Business scenario
 
-## What problem does it illustrate?
+An IT service desk receives requests across identity access, printing, networking and software. Consistent initial classification can reduce repetitive manual sorting while maintaining visibility into exceptions. This workflow illustrates an auditable, rules-based approach to initial triage.
 
-In a fictional hospital IT service desk, incoming tickets might need repeatable categorisation. This demo illustrates how simple, predefined rules could help with triage while unknown issues remain for a person to review.
+**Flow at a glance**
 
-**Technology:** Microsoft Power Automate Desktop, Windows, CSV files, local text-file logging.
+\`\`\`text
+Incoming requests.csv
+        |
+        v
+Check file exists -> Read CSV -> Process each ticket
+                                    |
+                        Match issue type + check urgency
+                                    |
+                    Assign team + priority + status
+                                    |
+                    +---------------+---------------+
+                    |                               |
+                    v                               v
+            triaged-tickets.csv                  run-log.txt
+                    |
+                    v
+             Completion summary
+\`\`\`
 
-**Scope:** Local and manually initiated. No live service desk, patient or staff records, clinical systems, APIs, email, Power Apps, Dataverse or cloud-based triggers.
+### Routing rules
 
-## Example: input → rules → output
+| Issue type | Proposed support team |
+|---|---|
+| Account Access | Identity and Access |
+| Printer | Desktop Support |
+| Network | Network Team |
+| Software | Application Support |
+| Anything else | Manual Review |
 
-| Input ticket | Issue type | Urgency | Suggested team | Priority | Status |
+Requests with \`Urgency = High\` receive \`Priority = High - Review\`. Unknown issue types receive \`Status = Needs Review\`; matched issue types receive \`Status = New\`. **Priority and status are separate fields.** The manual-review counter counts unmatched issue types only.
+
+## Example run
+
+Six sample tickets demonstrate four matching categories, two high-urgency flags and one unmatched request.
+
+| Ticket | Issue type | Urgency | Assigned team | Priority | Status |
 |---|---|---|---|---|---|
 | REQ-001 | Account Access | High | Identity and Access | High - Review | New |
 | REQ-002 | Printer | Low | Desktop Support | Standard | New |
@@ -37,41 +69,35 @@ In a fictional hospital IT service desk, incoming tickets might need repeatable 
 | REQ-005 | Unknown | Normal | Manual Review | Standard | Needs Review |
 | REQ-006 | Account Access | Normal | Identity and Access | Standard | New |
 
-**Key distinction:** Two tickets have a *High - Review priority*, but only **one** has *Needs Review status*. In this implementation, the manual-review counter increases only for unknown issue types, not for high-urgency tickets.
+**Sample totals:** 6 processed · 2 priority flags · 1 manual review
 
-Routing rules are fictional examples—not any hospital's real IT policies.
+Source: [requests.csv](requests.csv) · Reference: [expected-results.csv](expected-results.csv) · Saved output: [triaged-tickets.csv](triaged-tickets.csv)
 
-## How the automation works
+## Screenshots
 
-1. Checks for the file \`Desktop\HospitalITDemo\requests.csv\`. If missing, shows a warning and exits.
-2. Reads CSV rows into a PAD data table.
-3. Creates/overwrites \`triaged-tickets.csv\` and \`run-log.txt\`.
-4. Loops through tickets, using exact text matching on \`IssueType\`:
-   - \`Account Access\` → \`Identity and Access\`
-   - \`Printer\` → \`Desktop Support\`
-   - \`Network\` → \`Network Team\`
-   - \`Software\` → \`Application Support\`
-   - other values → \`Manual Review\`
-5. Sets \`Priority\` to \`High - Review\` when \`Urgency\` is \`High\`; otherwise \`Standard\`.
-6. Sets \`Status\` to \`Needs Review\` for unmatched issues; otherwise \`New\`.
-7. Appends one output and log record for each ticket, then displays ticket counts.
+### Power Automate Desktop workflow
 
-**The actual PAD action export:** [flow-actions.txt](flow-actions.txt). This is text copied from the existing desktop flow, not a standalone executable or hosted web application.
+![Power Automate Desktop flow design](Flow-Design.png)
 
-## Run the demo on Windows
+### Execution summary
 
-**Prerequisites**
+![Power Automate Desktop completion message](Completion.png)
 
-- A Windows PC with **Microsoft Power Automate Desktop** installed and access to its flow designer.
-- The ability to create a local folder and run a desktop flow.
-- These repository files: [requests.csv](requests.csv) and [flow-actions.txt](flow-actions.txt).
-- Optional: Python 3 to verify the checked-in example files (not required to run PAD).
+### Generated report
 
-**Step 1 — Set up the folder**
+![Result file after ticket processing](Results.png)
 
-Create a folder named \`HospitalITDemo\` on your Windows Desktop. Save the downloaded \`requests.csv\` into it with that exact filename (avoid \`requests.csv.txt\`).
+## Run in Power Automate Desktop
 
-Your folder should look like:
+### Requirements
+
+- Windows PC with Microsoft Power Automate Desktop installed and available to run desktop flows
+- Permission to create and write files within the Windows Desktop folder
+- Downloaded [requests.csv](requests.csv) and [flow-actions.txt](flow-actions.txt)
+
+### 1. Prepare the input
+
+Create a folder named \`HospitalITDemo\` on your Windows Desktop. Save [requests.csv](requests.csv) inside it with exactly that name.
 
 \`\`\`text
 Desktop/
@@ -79,17 +105,17 @@ Desktop/
     └── requests.csv
 \`\`\`
 
-**Step 2 — Set up the PAD flow**
+### 2. Open or recreate the flow
 
-If you are the project author, open the existing ticket automation flow in Power Automate Desktop.
+**Existing installation:** Open the original ticket-triage flow in Power Automate Desktop.
 
-If reproducing it on another Windows PC, create a new desktop flow and use [flow-actions.txt](flow-actions.txt) as the reference for building the \`Main\` subflow. Depending on PAD version, the action text may be pasteable in the designer when copied without the \`flow-actions.txt\` title, \`FUNCTION Main_copy GLOBAL\`, and final \`END FUNCTION\` wrapper; if paste fails, recreate the actions in the designer. This text file is not a guaranteed portable installer. Confirm every action and expression after import.
+**Fresh installation:** Create a desktop flow and use [flow-actions.txt](flow-actions.txt) to reconstruct the Main subflow. The file records the PAD actions for reference; it is not a standalone executable. Some PAD versions may accept action text copied from within the \`FUNCTION Main_copy GLOBAL\` and \`END FUNCTION\` wrapper directly into the designer; other versions require creating the equivalent actions manually. Review the expressions and action settings in the designer before saving.
 
-The flow uses \`%SpecialFolderPath%\HospitalITDemo\...\`, where \`SpecialFolderPath\` comes from \`Get special folder → Desktop\`. If your Desktop is redirected, check that the actual folder path matches this location. Ensure \`requests.csv\` is not locked by another application before running.
+The initial \`Get special folder\` action resolves the current user's Desktop path. All read/write operations use \`%SpecialFolderPath%\HospitalITDemo\...\`. If your Desktop is redirected to OneDrive or elsewhere, place the input file in the folder that the action resolves, or adjust the paths consistently.
 
-**Step 3 — Run**
+### 3. Execute
 
-Save the flow and select **Run** inside the PAD designer. A successful run of the six provided inputs should display:
+Save and run the flow from PAD. For the supplied six tickets, the completion dialog should report:
 
 \`\`\`text
 IT Ticket Processing Complete
@@ -98,96 +124,74 @@ Automation completed.
 
 Tickets processed: 6
 Tickets needing manual review: 1
-
-Check the HospitalITDemo folder for results.
 \`\`\`
 
-**Step 4 — Inspect output**
+### 4. Check the generated files
 
-The same \`HospitalITDemo\` folder should now include:
+After running, your local folder should contain:
 
 \`\`\`text
 HospitalITDemo/
-├── requests.csv          # Input
-├── triaged-tickets.csv   # Output (replaced on each run)
-└── run-log.txt           # Activity log (replaced on each run)
+├── requests.csv
+├── triaged-tickets.csv
+└── run-log.txt
 \`\`\`
 
-Open \`triaged-tickets.csv\`: compare to [expected-results.csv](expected-results.csv). Open \`run-log.txt\`: check for a start time and one entry per ticket. The copy checked into GitHub is [here](triaged-tickets.csv); it will **not** update automatically when you run PAD on your computer.
+Open \`triaged-tickets.csv\` and compare the six rows with [expected-results.csv](expected-results.csv). Open \`run-log.txt\` to verify the run-start timestamp and a record for each ticket. The files in this GitHub repository are a saved example, not files that update automatically when your desktop flow runs.
 
-**Step 5 — Try two more tests**
+### 5. Verify resilience
 
-- **Repeatability:** Run again with the same input and check the output still has exactly six data rows, not twelve.
-- **Missing input:** Temporarily rename \`requests.csv\` to \`requests-backup.csv\`, run again, and check the warning appears. Restore its original name afterwards.
+- **Repeat run:** Run the flow a second time with the same input. The expected output is six ticket rows, not twelve, because the flow overwrites the report before writing its ticket entries.
+- **Missing input:** Temporarily rename \`requests.csv\` to \`requests-backup.csv\` and run the flow. Check for its missing-input warning and restore the filename afterwards.
 
-Record actual findings in [test-results.md](test-results.md). These manual tests are not automatically proven by the repository file comparison.
+Record observed results in [test-results.md](test-results.md). The repository's automatic tests do not execute PAD on Windows.
 
-## Screenshots and demo guide
+## Browser demonstration
 
-Screenshots are saved in the **repository root**, so these links work directly:
+The separate [interactive browser demo](demo/) implements the documented routing logic, includes the six sample tickets, supports custom CSV inputs and allows downloading a generated report and activity log. It uses a standards-aware CSV parser and exporter to support quoted fields and provides a convenient way to review the workflow without installing PAD.
 
-### Flow design
+**Browser demo ≠ desktop runtime.** The browser simulation demonstrates routing rules and sample outcomes but cannot test PAD actions, Windows file handling, desktop permissions or local workflow execution.
 
-![Flow design in Power Automate Desktop](Flow-Design.png)
+### Publishing the browser demo
 
-### Completion dialog
+The source is already in the repository's \`demo/\` folder. To create a public hosted URL, enable GitHub Pages in repository **Settings → Pages**, select **Deploy from a branch**, use \`main\` and \`/(root)\`, then save. Once GitHub displays the published site address, the demo will be available at a URL similar to \`https://alishahnaz.github.io/hospital-it-ticket-automation/demo/\`. The hosting address is an expected pattern, **not a verified live link** until GitHub Pages deployment completes.
 
-![Completion message from example run](Completion.png)
+Alternatively, download both \`demo/index.html\` and \`demo/triage.js\` into the same local folder and open \`index.html\` in a browser.
 
-### Example results
+## Quality assurance
 
-![Generated output screenshot](Results.png)
+The repository includes two complementary levels of checks:
 
-### How to record a 2-minute walkthrough
+1. **Automated:** [GitHub Actions validation](.github/workflows/validate.yml) runs JavaScript regression tests for routing, expected output and CSV edge cases, plus the Python [verify_results.py](verify_results.py) checks for committed results and log completeness. Locally run \`node --test tests/*.test.js\` (Node.js 22+) and \`python verify_results.py\` (Python 3).
+2. **Desktop workflow:** The PAD-specific checklist covers successful execution, a repeat run, handling a missing input file, and confirmation of the generated report and log. Refer to [test-results.md](test-results.md) for evidence status.
 
-1. **0:00–0:20** — Explain the fictional IT service-desk problem.
-2. **0:20–0:40** — Show six entries in \`requests.csv\`.
-3. **0:40–1:05** — Walk through routing and priority logic in PAD.
-4. **1:05–1:25** — Run the flow and show the completion dialog.
-5. **1:25–1:50** — Open the generated CSV and activity log; highlight REQ-005.
-6. **1:50–2:00** — Explain limitations and possible next steps.
+Only executed checks should be described as passed.
 
-Record with a Windows screen recorder, inspect for accidental personal information, and share a video link here **only after creating and publishing the recording**. There is currently no hosted live demo or video link.
+## Implementation and considerations
 
-## Verify the sample files without PAD
+The PAD implementation features local file existence checking, CSV data tables, conditional routing, urgency checks, ticket counters, CSV file output and timestamped logging. It operates as a manually started desktop workflow. Current constraints and potential extensions include:
 
-The checked-in output has been compared with the expected results: **six rows match**, two priority flags are present, one unmatched ticket needs manual review, and the log records all six tickets.
+- Exact string matching for issue types; standardising the input would improve coverage.
+- The PAD action file concatenates output fields and does not fully escape commas, quotes or line breaks. The browser demo implements CSV escaping; the PAD flow should be enhanced before accepting arbitrary free-text inputs.
+- Additional validation, resilient exception handling and monitoring would be needed for operational use.
+- Escalation notifications, live ticket-system connectors, human approval checkpoints and unattended orchestration could extend the prototype if appropriate systems and permissions were available.
 
-To reproduce these **file-level** checks, install Python 3, download/clone the full repository, open a terminal in its folder and run:
+## Repository contents
 
-\`\`\`powershell
-python verify_results.py
-\`\`\`
-
-See [verify_results.py](verify_results.py) and [test-results.md](test-results.md). Passing these tests **does not** prove that the Windows automation was freshly executed or that missing-file / repeat-run behaviour was observed.
-
-## Current limitations and possible improvements
-
-- Runs manually on one Windows machine; it is **not** a real-time service desk.
-- Uses exact issue-type strings; different capitalisation or extra spaces may not match.
-- Writes CSV rows by joining values, without full CSV quoting/escaping. Commas, quotes or newlines in input fields could make the output invalid.
-- Basic missing-input validation is present, but comprehensive error handling, notifications and retries are not.
-- Urgent priority is marked; there is no separate escalation status or notification.
-- No Power Apps, Dataverse, enterprise connectors, deployment pipeline or access-control demonstration.
-
-Logical future upgrades: robust CSV escaping and input validation; configuration-driven rules; structured test cases; a clear escalation workflow; and integration with approved enterprise tools, if access is available.
-
-## Repository file guide
-
-| File | Purpose |
+| File / folder | Purpose |
 |---|---|
-| [README.md](README.md) | This reviewer and setup guide |
-| [requests.csv](requests.csv) | Six **fictional** input tickets |
-| [flow-actions.txt](flow-actions.txt) | Text representation of PAD actions |
-| [triaged-tickets.csv](triaged-tickets.csv) | Sample output from an earlier run |
-| [expected-results.csv](expected-results.csv) | Reference expected output |
-| [run-log.txt](run-log.txt) | Example activity log |
-| [verify_results.py](verify_results.py) | Offline checks of checked-in evidence |
-| [test-results.md](test-results.md) | Evidence, unverified tests and manual test steps |
-| [Flow-Design.png](Flow-Design.png) | Screenshot of the flow |
-| [Completion.png](Completion.png) | Screenshot of completion message |
-| [Results.png](Results.png) | Screenshot of sample output |
+| [requests.csv](requests.csv) | Representative input tickets |
+| [flow-actions.txt](flow-actions.txt) | Desktop flow action text |
+| [expected-results.csv](expected-results.csv) | Reference expected report |
+| [triaged-tickets.csv](triaged-tickets.csv) | Saved example output |
+| [run-log.txt](run-log.txt) | Saved activity log |
+| [demo/](demo/) | Standalone interactive HTML and JavaScript preview |
+| [tests/](tests/) | Automated regression test suite |
+| [.github/workflows/validate.yml](.github/workflows/validate.yml) | Automated checks on push and pull requests |
+| [verify_results.py](verify_results.py) | Validation of repository evidence |
+| [test-results.md](test-results.md) | Test record and desktop QA procedure |
+| [Flow-Design.png](Flow-Design.png), [Completion.png](Completion.png), [Results.png](Results.png) | Visual workflow evidence |
 
-## Data, privacy and attribution
+## Data handling
 
-All input tickets are synthetic. Do not upload patient data, genuine employee information, credentials or other confidential records. This independent learning project was **not commissioned, sponsored, approved or reviewed by The Royal Women's Hospital** or any other hospital.
+The example tickets are synthetic and contain no patient records, production credentials or confidential IT service-desk information. The scenario and team routing names are illustrative and should be adapted to any organisation's approved processes before operational use.
